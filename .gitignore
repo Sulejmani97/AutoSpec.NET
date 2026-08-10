@@ -1,0 +1,14 @@
+﻿# Visual Studio
+.vs/
+*.user
+
+# .NET build files
+**/bin/
+**/obj/
+
+# React / Node
+**/node_modules/
+
+# React build output
+**/dist/
+**/build/
