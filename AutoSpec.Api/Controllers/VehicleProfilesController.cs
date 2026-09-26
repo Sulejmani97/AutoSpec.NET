@@ -109,5 +109,23 @@ namespace AutoSpec.Api.Controllers
 
             return Ok(vehicle);
         }
+
+        [HttpDelete("/deleteVehicleProfile")]
+        public async Task<IActionResult> DeleteVehicleProfile([FromQuery] int id)
+        {
+            var vehicle = await _context.VehicleProfiles
+                .FirstOrDefaultAsync(v => v.VehicleProfileID == id);
+
+            if (vehicle == null)
+            {
+                return NotFound();
+            }
+
+            _context.VehicleProfiles.Remove(vehicle);
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
