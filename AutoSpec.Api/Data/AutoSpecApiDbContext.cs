@@ -18,6 +18,7 @@ namespace AutoSpec.Api.Data
             base.OnModelCreating(modelBuilder);
 
             // MaintenanceRecords
+
             modelBuilder.Entity<MaintenanceRecords>()
                 .Property(m => m.Cost)
                 .HasPrecision(10, 2);
@@ -28,13 +29,27 @@ namespace AutoSpec.Api.Data
 
             modelBuilder.Entity<MaintenanceRecords>()
                 .Property(m => m.DateCreated)
+                .HasColumnType("datetime2")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+            modelBuilder.Entity<MaintenanceRecords>()
+                .HasOne(m => m.VehicleProfile)
+                .WithMany(v => v.MaintenanceRecords)
+                .HasForeignKey(m => m.VehicleProfileID)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // MileageTracking
+
             modelBuilder.Entity<MileageTracking>()
                 .Property(m => m.DateRecorded)
-                .HasColumnType("datetime")
+                .HasColumnType("datetime2")
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            modelBuilder.Entity<MileageTracking>()
+                .HasOne(m => m.VehicleProfile)
+                .WithMany(v => v.MileageTracking)
+                .HasForeignKey(m => m.VehicleProfileID)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
