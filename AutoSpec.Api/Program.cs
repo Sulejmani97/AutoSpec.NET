@@ -13,7 +13,20 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AutoSpecApiDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactClient", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("ReactClient");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

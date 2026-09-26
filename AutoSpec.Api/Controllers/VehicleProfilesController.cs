@@ -65,5 +65,49 @@ namespace AutoSpec.Api.Controllers
                 });
             }
         }
+
+        [HttpGet("/getVehicleProfiles")]
+        public async Task<IActionResult> GetVehicleProfiles()
+        {
+            var vehicles = await _context.VehicleProfiles
+                .Select(v => new
+                {
+                    v.VehicleProfileID,
+                    v.PictureURL,
+                    v.ProfileName,
+                    v.VehicleColor,
+                    v.VehicleMake,
+                    v.VehicleModel,
+                    v.VehicleTrim,
+                    v.VehicleYear,
+
+                    Mileage = v.MileageTracking
+                        .OrderByDescending(m => m.DateRecorded)
+                        .Select(m => (int?)m.Mileage)
+                        .FirstOrDefault(),
+
+                    DateRecorded = v.MileageTracking
+                        .OrderByDescending(m => m.DateRecorded)
+                        .Select(m => m.DateRecorded)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Ok(vehicles);
+        }
+
+        [HttpGet("/getVehicleProfilesByID")]
+        public async Task<IActionResult> GetVehicleProfileById([FromQuery] int id)
+        {
+            var vehicle = await _context.VehicleProfiles
+                .FirstOrDefaultAsync(v => v.VehicleProfileID == id);
+
+            if (vehicle == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(vehicle);
+        }
     }
 }
