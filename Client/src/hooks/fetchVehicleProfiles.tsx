@@ -14,7 +14,7 @@ export default async function fetchVehicleProfiles(
     }
 
     const result = await response.json();
-    setProfiles(result[0]);
+    setProfiles(result);
   } catch (error) {
     console.error(error instanceof Error ? error.message : "An error occurred");
     setError(error instanceof Error ? error : new Error("An error occurred"));
