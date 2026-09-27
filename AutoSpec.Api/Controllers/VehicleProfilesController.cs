@@ -28,7 +28,7 @@ namespace AutoSpec.Api.Controllers
                 var vehicle = new VehicleProfiles
                 {
                     VehicleMake = request.SelectedMake,
-                    VehicleYear = request.SelectedYear,
+                    VehicleYear = request.SelectedYear.ToString(),
                     VehicleModel = request.SelectedModel,
                     VehicleTrim = request.SelectedTrim,
                     ProfileName = request.Name,

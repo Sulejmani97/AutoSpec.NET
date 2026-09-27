@@ -7,8 +7,8 @@ namespace AutoSpec.Api.DTOs
         [Required]
         public string SelectedMake { get; set; } = string.Empty;
 
-        [Required]
-        public string SelectedYear { get; set; } = string.Empty;
+        [Required, Range(1900, 2100)]
+        public int SelectedYear { get; set; }
 
         [Required]
         public string SelectedModel { get; set; } = string.Empty;
