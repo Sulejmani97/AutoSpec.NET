@@ -1,7 +1,12 @@
 using AutoSpec.Api.Data;
+using AutoSpec.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var pexelsApiKey = builder.Configuration["Pexels:ApiKey"]
+    ?? throw new InvalidOperationException(
+        "Pexels API key is not configured.");
 
 // Add services to the container.
 // Disable the default camelCase naming policy for JSON serialization
@@ -26,6 +31,17 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
+});
+
+builder.Services.AddHttpClient<CarApiService>(client =>
+{
+    client.BaseAddress = new Uri("https://carapi.app/");
+});
+
+builder.Services.AddHttpClient<PexelsService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.pexels.com/v1/");
+    client.DefaultRequestHeaders.Add("Authorization", pexelsApiKey);
 });
 
 var app = builder.Build();
