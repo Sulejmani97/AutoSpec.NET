@@ -31,6 +31,20 @@ namespace AutoSpec.Api.Controllers
                 });
             }
 
+            // Find the highest reading we already have for this vehicle.
+            // Cast to int? so a vehicle with no readings returns null instead of throwing.
+            var highestMileage = await _context.MileageTracking
+                .Where(m => m.VehicleProfileID == request.VehicleProfileId)
+                .MaxAsync(m => (int?)m.Mileage);
+
+            if (highestMileage.HasValue && request.Mileage <= highestMileage.Value)
+            {
+                return BadRequest(new
+                {
+                    error = $"Mileage must be greater than the current reading of {highestMileage.Value}."
+                });
+            }
+
             var mileageRecord = new MileageTracking
             {
                 VehicleProfileID = request.VehicleProfileId,
