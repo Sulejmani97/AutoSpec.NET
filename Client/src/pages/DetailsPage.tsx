@@ -46,7 +46,9 @@ function DetailsPage() {
     ],
     datasets: [
       {
-        label: "Miles driven per month in " + today.getFullYear().toString(),
+        label:
+          "Estimated miles driven per month in " +
+          today.getFullYear().toString(),
         data: mileageRecords.map((record) => record.miles),
         backgroundColor: "#b90000",
         borderColor: "#b90000",
