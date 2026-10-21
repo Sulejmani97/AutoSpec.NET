@@ -3,7 +3,7 @@ using AutoSpec.Api.DTOs;
 using AutoSpec.Api.Models.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using AutoSpec.Api.Services;
 namespace AutoSpec.Api.Controllers
 {
     [ApiController]
@@ -31,6 +31,20 @@ namespace AutoSpec.Api.Controllers
                 });
             }
 
+            // Find the highest reading we already have for this vehicle.
+            // Cast to int? so a vehicle with no readings returns null instead of throwing.
+            var highestMileage = await _context.MileageTracking
+                .Where(m => m.VehicleProfileID == request.VehicleProfileId)
+                .MaxAsync(m => (int?)m.Mileage);
+
+            if (highestMileage.HasValue && request.Mileage <= highestMileage.Value)
+            {
+                return BadRequest(new
+                {
+                    error = $"Mileage must be greater than the current reading of {highestMileage.Value}."
+                });
+            }
+
             var mileageRecord = new MileageTracking
             {
                 VehicleProfileID = request.VehicleProfileId,
@@ -52,75 +66,35 @@ namespace AutoSpec.Api.Controllers
         [HttpGet("/getMileageRecords/{vehicleProfileId}")]
         public async Task<IActionResult> GetMileageRecords(int vehicleProfileId)
         {
-            // Get all mileage records for this vehicle that have a date.
-            // We need the previous record to calculate miles driven.
+            // Load only the date and mileage of each reading for this vehicle.
             var records = await _context.MileageTracking
                 .Where(m =>
                     m.VehicleProfileID == vehicleProfileId &&
                     m.DateRecorded != null)
-                .OrderBy(m => m.DateRecorded)
+                .Select(m => new { m.DateRecorded, m.Mileage })
                 .ToListAsync();
+
+            // Keep just the day of each reading (not the time of day).
+            var readings = records.Select(r => new MileageReading(
+                DateOnly.FromDateTime(r.DateRecorded!.Value),
+                r.Mileage));
+
+            var monthlyMiles = MileageCalculator.EstimateMonthlyMiles(
+                readings, DateTime.Now.Year);
 
             // Names of the 12 months.
             var months = new[]
             {
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-    };
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            };
 
-            // One total for each month.
-            // Index 0 = January, 1 = February, etc.
-            var monthlyMiles = new int[12];
-
-            var currentYear = DateTime.Now.Year;
-
-            // Start at 1 because we compare each record to the previous record.
-            for (int i = 1; i < records.Count; i++)
-            {
-                var currentRecord = records[i];
-                var previousRecord = records[i - 1];
-
-                var recordDate = currentRecord.DateRecorded!.Value;
-
-                // Only include mileage entries whose current reading
-                // occurred during the current year.
-                if (recordDate.Year != currentYear)
-                {
-                    continue;
-                }
-
-                // Calculate how many miles were driven since the previous reading.
-                var milesDriven = currentRecord.Mileage - previousRecord.Mileage;
-
-                // Ignore negative or zero differences.
-                if (milesDriven <= 0)
-                {
-                    continue;
-                }
-
-                // DateTime.Month is 1-12.
-                // Arrays are 0-11, so subtract 1.
-                var monthIndex = recordDate.Month - 1;
-
-                monthlyMiles[monthIndex] += milesDriven;
-            }
-
-            // Turn the totals into the format your React client expects.
+            // Round to whole miles for the chart.
             var result = months
                 .Select((month, index) => new
                 {
                     month,
-                    miles = monthlyMiles[index]
+                    miles = (int)Math.Round(monthlyMiles[index])
                 })
                 .ToList();
 

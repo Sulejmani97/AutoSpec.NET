@@ -46,7 +46,9 @@ function DetailsPage() {
     ],
     datasets: [
       {
-        label: "Miles driven per month in " + today.getFullYear().toString(),
+        label:
+          "Estimated miles driven per month in " +
+          today.getFullYear().toString(),
         data: mileageRecords.map((record) => record.miles),
         backgroundColor: "#b90000",
         borderColor: "#b90000",
@@ -58,29 +60,39 @@ function DetailsPage() {
   const handleOpen = () => setOpen(!open);
 
   const handleMileageUpdate = async () => {
-    if (newMileage <= location.state.Mileage) {
+    // 1. Compare against the latest known mileage, not the page-load value
+    if (newMileage <= profile.Mileage) {
       alert("New mileage must be greater than current mileage.");
-      return;
+      return; // dialog stays open so the user can fix the number
     }
 
-    await addMileageRecord(
-      location.state.VehicleProfileID,
-      newMileage,
-      "Mileage updated"
-    );
+    // 2. try/catch so a failed request shows a message instead of failing silently
+    try {
+      await addMileageRecord(
+        profile.VehicleProfileID,
+        newMileage,
+        "Mileage updated",
+      );
 
-    // Update local state (mileage only) to reflect new mileage
-    setProfile({ ...profile, Mileage: newMileage });
-    alert("Mileage updated successfully!");
+      setProfile({ ...profile, Mileage: newMileage });
+
+      // 3. await the reload so the chart updates before the alert appears
+      const records = await fetchMileageRecords(profile.VehicleProfileID);
+      setMileageRecords(records);
+
+      // 4. Only close the dialog once everything succeeded
+      setOpen(false);
+      alert("Mileage updated successfully!");
+    } catch {
+      alert("Couldn't update the mileage. Please try again.");
+    }
   };
 
   // Reset scroll position on page load
   useEffect(() => {
-    setProfile(location.state);
-
     const fetchData = async () => {
       const records = await fetchMileageRecords(
-        location.state.VehicleProfileID
+        location.state.VehicleProfileID,
       );
       setMileageRecords(records);
     };
@@ -190,7 +202,6 @@ function DetailsPage() {
                     color="green"
                     onClick={() => {
                       handleMileageUpdate();
-                      handleOpen();
                     }}
                     placeholder={undefined}
                     onPointerEnterCapture={undefined}
