@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="AutoSpec.Api.Tests/AutoSpec.Api.Tests.csproj" Id="0f9d3950-2eb5-4423-aa43-4f6307874b06" />
   <Project Path="AutoSpec.Api/AutoSpec.Api.csproj" Id="d33f1491-1702-4f15-8a75-fc5daa584179" />
 </Solution>
